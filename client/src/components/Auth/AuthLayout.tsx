@@ -25,11 +25,6 @@ function AuthLayout({
   error: TranslationKeys | null;
 }) {
   const localize = useLocalize();
-  const terminalGradientStyle = {
-    backgroundColor: '#020202',
-    backgroundImage:
-      'radial-gradient(125% 90% at 50% -10%, rgba(64, 64, 64, 0.48) 0%, rgba(20, 20, 20, 0.2) 40%, rgba(4, 4, 4, 0.97) 70%), linear-gradient(180deg, #212121 0%, #090909 38%, #020202 100%)',
-  };
 
   const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
   const DisplayError = () => {
@@ -62,16 +57,13 @@ function AuthLayout({
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden" style={terminalGradientStyle}>
-      <div className="pointer-events-none absolute inset-0 flex items-start justify-center" aria-hidden="true">
-        <img src="assets/logo.svg" className="mt-10 h-24 w-24 opacity-15" alt="" />
-      </div>
+    <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 flex h-10 w-full items-center justify-center">
+        <div className="mt-6 h-10 w-full bg-cover">
           <img
             src="assets/logo.svg"
-            className="h-7 w-7 object-contain opacity-85"
+            className="h-full w-full object-contain"
             alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'Bolt App' })}
           />
         </div>
@@ -82,10 +74,10 @@ function AuthLayout({
       </div>
 
       <main className="flex flex-grow items-center justify-center">
-        <div className="w-authPageWidth overflow-hidden rounded-2xl border border-white/10 bg-black/45 px-6 py-4 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-sm sm:max-w-md">
+        <div className="w-authPageWidth overflow-hidden bg-white px-6 py-4 dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
           {!hasStartupConfigError && !isFetching && header && (
             <h1
-              className="mb-4 text-center text-3xl font-semibold text-white"
+              className="mb-4 text-center text-3xl font-semibold text-black dark:text-white"
               style={{ userSelect: 'none' }}
             >
               {header}
