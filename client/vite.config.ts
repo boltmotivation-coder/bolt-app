@@ -1,6 +1,8 @@
 import react from '@vitejs/plugin-react';
 // @ts-ignore
 import path from 'path';
+// @ts-ignore
+import { readdirSync, copyFileSync, mkdirSync, existsSync } from 'node:fs';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
 import { compression } from 'vite-plugin-compression2';
@@ -35,14 +37,15 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     nodePolyfills(),
+    copyPublicAssets(),
     VitePWA({
-      injectRegister: 'auto', // 'auto' | 'manual' | 'disabled'
-      registerType: 'autoUpdate', // 'prompt' | 'autoUpdate'
+      injectRegister: 'auto',
+      registerType: 'autoUpdate',
       devOptions: {
-        enabled: false, // disable service worker registration in development mode
+        enabled: false,
       },
       useCredentials: true,
-      includeManifestIcons: false,
+      includeManifestIcons: true,
       workbox: {
         globPatterns: [
           '**/*.{js,css,html}',
@@ -54,12 +57,14 @@ export default defineConfig(({ command }) => ({
         ],
         globIgnores: ['images/**/*', '**/*.map', 'index.html'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        navigateFallback: null,
         navigateFallbackDenylist: [/^\/oauth/, /^\/api/],
       },
       includeAssets: [],
       manifest: {
         name: 'Bolt App',
         short_name: 'Bolt',
+        start_url: '/',
         display: 'standalone',
         background_color: '#000000',
         theme_color: '#009688',
@@ -280,6 +285,34 @@ export default defineConfig(({ command }) => ({
     },
   },
 }));
+
+/**
+ * Copies public/assets and robots.txt into dist/ during writeBundle,
+ * which runs BEFORE VitePWA's closeBundle generates the service worker.
+ * This ensures Workbox sees the icon files when building the precache manifest.
+ */
+function copyPublicAssets(): Plugin {
+  return {
+    name: 'copy-public-assets',
+    apply: 'build',
+    writeBundle() {
+      const srcAssets = path.resolve(__dirname, 'public', 'assets');
+      const destAssets = path.resolve(__dirname, 'dist', 'assets');
+      if (!existsSync(destAssets)) {
+        mkdirSync(destAssets, { recursive: true });
+      }
+      for (const entry of readdirSync(srcAssets, { withFileTypes: true })) {
+        if (entry.isFile()) {
+          copyFileSync(path.join(srcAssets, entry.name), path.join(destAssets, entry.name));
+        }
+      }
+      const robotsSrc = path.resolve(__dirname, 'public', 'robots.txt');
+      if (existsSync(robotsSrc)) {
+        copyFileSync(robotsSrc, path.resolve(__dirname, 'dist', 'robots.txt'));
+      }
+    },
+  };
+}
 
 interface SourcemapExclude {
   excludeNodeModules?: boolean;
